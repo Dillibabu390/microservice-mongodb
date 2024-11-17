@@ -1,0 +1,19 @@
+2024-11-17 18:47:20.554 [main] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Failed to bind properties under 'spring.data.mongodb.port' to java.lang.Integer:
+
+    Property: spring.data.mongodb.port
+    Value: "portnumer"
+    Origin: class path resource [application.properties] - 4:26
+    Reason: failed to convert java.lang.String to java.lang.Integer (caused by java.lang.NumberFormatException: For input string: "portnumer")
+
+Action:
+
+Update your application's configuration
+

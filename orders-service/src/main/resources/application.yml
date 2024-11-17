@@ -1,0 +1,22 @@
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://localhost:8282/eureka
+
+server:
+  port: 8070
+spring:
+  application:
+    name: orders
+  config:
+    import: optional:configserver:http://localhost:8888
+
+application:
+  config:
+    products-url: http://localhost:8090
+
+kafka:
+  topic:
+    orders: "orders-topic"

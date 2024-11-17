@@ -1,0 +1,15 @@
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    register-with-eureka: false  # This service will not register with Eureka
+    fetch-registry: true         # This service will fetch the registry from Eureka
+    service-url:
+      defaultZone: http://localhost:8761/eureka/  # Eureka server should typically run on port 8761
+
+server:
+  port: 8282  # The service will run on port 8282
+
+spring:
+  config:
+    import: optional:configserver:http://localhost:8888  # Importing configuration from Config Server

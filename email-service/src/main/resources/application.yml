@@ -1,0 +1,13 @@
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://localhost:8282/eureka
+
+
+spring:
+  application:
+    name: orders
+  config:
+    import: optional:configserver:http://localhost:8888
