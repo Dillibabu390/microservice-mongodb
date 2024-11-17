@@ -28,6 +28,7 @@ public class Product {
     private String description;
 
     @NotNull
+    @Positive(message = "Price must be positive")
     private Double price;
 
     @NotNull
