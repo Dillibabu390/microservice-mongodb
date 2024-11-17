@@ -1,0 +1,45 @@
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8282/eureka/  # Ensure this URL points to your Eureka server
+    register-with-eureka: false  # This service will not register with Eureka
+    fetch-registry: true  # This service will fetch registry information from Eureka
+
+server:
+  port: 8222  # Port for the Gateway service
+
+spring:
+  application:
+    name: gateway  # Name of the application
+
+  config:
+    import: optional:configserver:http://localhost:8888  # Importing configuration from Config Server
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true  # Enable service discovery via Eureka
+
+      # Define routes for the services
+      routes:
+        - id: ORDERS-SERVICE  # Route for the Orders service
+          uri: lb://ORDERS-SERVICE  # Use service discovery with load balancing
+          predicates:
+            - Path=/orders/**  # Route requests starting with /orders to Orders service
+          filters:
+            - name: AuthenticationFilter  # Assuming you have an AuthenticationFilter
+
+        - id: PRODUCT-SERVICE  # Route for the Product service
+          uri: lb://PRODUCT-SERVICE  # Use service discovery with load balancing
+          predicates:
+            - Path=/products/**  # Route requests starting with /products to Product service
+          filters:
+            - name: AuthenticationFilter  # Assuming you have an AuthenticationFilter
+
+        - id: AUTH-SERVICE  # Route for the Auth service
+          uri: lb://AUTH-SERVICE  # Use service discovery with load balancing
+          predicates:
+            - Path=/auth/**  # Route requests starting with /auth to Auth service
+          filters:
+            - name: AuthenticationFilter  # Assuming you have an AuthenticationFilter
