@@ -1,164 +1,200 @@
 package com.ncash.productservice.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ncash.productservice.constant.ResponseMessage;
 import com.ncash.productservice.dto.ProductDto;
 import com.ncash.productservice.entity.Product;
-import com.ncash.productservice.response.APIResponseUtil;
-import com.ncash.productservice.service.ProductService;
-
 import com.ncash.productservice.exception.ProductNotFoundException;
+import com.ncash.productservice.service.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import org.springframework.http.*;
-import org.springframework.test.web.servlet.*;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Arrays;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class ProductControllerTest {
+@WebMvcTest(ProductController.class)
+public class ProductControllerTest {
 
-    @Mock
-    private ProductService productService;
-
-    @Mock
-    private APIResponseUtil apiResponseUtil;
-
-    @InjectMocks
-    private ProductController productController;
-
+    @Autowired
     private MockMvc mockMvc;
 
-    private ProductDto productDto;
-    private Product product;
+    @MockBean
+    private ProductService productService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private ProductDto validProductDto;
+    private static final String PRODUCT_ID = "7f13b293";
+    private static final String NON_EXISTENT_PRODUCT_ID = "999";
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this); // Initialize mocks
-        mockMvc = MockMvcBuilders.standaloneSetup(productController).build();
-
-        // Creating a ProductDto with values
-        ProductDto productDto = new ProductDto(
-                "12345", // productId
-                "ssss",  // name
-                null,    // description (null because you didn't provide it in the example)
-                2.3,     // price
-                2,       // stock
-                ""       // status (empty string as per your example)
-        );
-        // Creating a Product with values
-        Product product = new Product(
-                "12345",  // productId
-                "ssss",   // name
-                null,     // description (null because you didn't provide it in the example)
-                2.3,      // price
-                2,        // stock
-                ""        // status (empty string as per your example)
-        );
+    public void setUp() {
+        validProductDto = new ProductDto();
+        validProductDto.setProductId("7f13b493");
+        validProductDto.setName("Test Product");
+        validProductDto.setDescription("A test product description");
+        validProductDto.setPrice(100.0);
+        validProductDto.setStock(50);
+        validProductDto.setStatus("AVAILABLE");
     }
 
     @Test
-    void addProduct() throws Exception {
-        // Arrange: Mock the addProduct method to return a product
-        when(productService.addProduct(any(ProductDto.class))).thenReturn(product);
+    public void addProduct_Success() throws Exception {
+        Product mockProduct = new Product();
+        mockProduct.setProductId("7f13b293");
+        mockProduct.setName(validProductDto.getName());
+        mockProduct.setDescription(validProductDto.getDescription());
+        mockProduct.setPrice(validProductDto.getPrice());
+        mockProduct.setStock(validProductDto.getStock());
+        mockProduct.setStatus(validProductDto.getStatus());
 
-        // Act: Perform the POST request to add a product
+        when(productService.addProduct(validProductDto)).thenReturn(mockProduct);
+
         mockMvc.perform(post("/products")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"productId\": \"12345\", \"productName\": \"Product A\", \"stock\": 10}")
-                )
-                .andExpect(status().isOk()) // Assert: Expect HTTP 200 OK
-                .andExpect(jsonPath("$.message").value("Data Saved")); // Assert the message in the response
+                        .content(objectMapper.writeValueAsString(validProductDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.name").value(validProductDto.getName()))
+                .andExpect(jsonPath("$.data.description").value(validProductDto.getDescription()))
+                .andExpect(jsonPath("$.msg").value("DATA SAVED SUCCESSFULLY"));
+
+        verify(productService, times(1)).addProduct(any(ProductDto.class));
     }
 
     @Test
-    void getAllProducts() throws Exception {
-        // Arrange: Mock the getAllProducts method to return a list of products
-        when(productService.getAllProducts()).thenReturn(List.of(product));
+    public void getAllProducts_Success() throws Exception {
+        Product product1 = new Product("1", "Product 1", "Description 1", 100.0, 10, "AVAILABLE");
+        Product product2 = new Product("2", "Product 2", "Description 2", 150.0, 20, "OUT_OF_STOCK");
+        List<Product> productList = Arrays.asList(product1, product2);
 
-        // Act: Perform the GET request to get all products
-        mockMvc.perform(get("/products"))
-                .andExpect(status().isOk()) // Assert: Expect HTTP 200 OK
-                .andExpect(jsonPath("$.data.productId").value("12345")); // Assert the product ID in the response
+        when(productService.getAllProducts()).thenReturn(productList);
+
+        mockMvc.perform(get("/products").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].name").value("Product 1"))
+                .andExpect(jsonPath("$.data[1].name").value("Product 2"))
+                .andExpect(jsonPath("$.status").value(true))
+                .andExpect(jsonPath("$.msg").value(""));
+
+        verify(productService, times(1)).getAllProducts();
     }
 
     @Test
-    void getProductById() throws Exception {
-        // Arrange: Mock the getProductById method to return a productDto
-        when(productService.getProductById(anyString())).thenReturn(productDto);
+    public void getAllProducts_EmptyList() throws Exception {
+        when(productService.getAllProducts()).thenReturn(List.of());
 
-        // Act: Perform the GET request to get a product by ID
-        mockMvc.perform(get("/products/12345"))
-                .andExpect(status().isOk()) // Assert: Expect HTTP 200 OK
-                .andExpect(jsonPath("$.data.productId").value("12345")); // Assert the product ID in the response
+        mockMvc.perform(get("/products").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isEmpty())
+                .andExpect(jsonPath("$.msg").value("No Records Found"));
+
+        verify(productService, times(1)).getAllProducts();
     }
 
     @Test
-    void updateProduct() throws Exception {
-        // Arrange: Mock the updateProduct method to return an updated productDto
-        when(productService.updateProduct(eq("12345"), any(ProductDto.class))).thenReturn(productDto);
+    public void getAllProducts_Error() throws Exception {
+        when(productService.getAllProducts()).thenThrow(new RuntimeException("Unexpected error"));
 
-        // Act: Perform the PUT request to update a product
-        mockMvc.perform(put("/products/12345")
+        mockMvc.perform(get("/products").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.msg").value("Unexpected error"));
+
+        verify(productService, times(1)).getAllProducts();
+    }
+
+    @Test
+    void getProductById_Success() throws Exception {
+        when(productService.getProductById(PRODUCT_ID)).thenReturn(validProductDto);
+
+        mockMvc.perform(get("/products/{id}", PRODUCT_ID).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(true))
+                .andExpect(jsonPath("$.data.productId").value(validProductDto.getProductId()))
+                .andExpect(jsonPath("$.data.name").value(validProductDto.getName()))
+                .andExpect(jsonPath("$.msg").value(""));
+
+        verify(productService, times(1)).getProductById(PRODUCT_ID);
+    }
+
+    @Test
+    void getProductById_ProductNotFound() throws Exception {
+        when(productService.getProductById(NON_EXISTENT_PRODUCT_ID)).thenThrow(new ProductNotFoundException("Product not found"));
+
+        mockMvc.perform(get("/products/{id}", NON_EXISTENT_PRODUCT_ID).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(false))
+                .andExpect(jsonPath("$.msg").value("Product not found"));
+
+        verify(productService, times(1)).getProductById(NON_EXISTENT_PRODUCT_ID);
+    }
+
+    @Test
+    void getProductById_InternalServerError() throws Exception {
+        when(productService.getProductById(PRODUCT_ID)).thenThrow(new RuntimeException("Internal server error"));
+
+        mockMvc.perform(get("/products/{id}", PRODUCT_ID).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(false))
+                .andExpect(jsonPath("$.msg").value(ResponseMessage.INTERNAL_SERVER_ERROR));
+
+        verify(productService, times(1)).getProductById(PRODUCT_ID);
+    }
+
+    @Test
+    public void updateProduct_ValidRequest_ShouldReturnUpdatedProduct() throws Exception {
+        ProductDto requestProductDto = new ProductDto();
+        requestProductDto.setProductId("7f13b493");
+        requestProductDto.setName("Updated Product");
+        requestProductDto.setDescription("Updated product description");
+        requestProductDto.setPrice(120.0);
+        requestProductDto.setStock(60);
+        requestProductDto.setStatus("AVAILABLE");
+
+        when(productService.updateProduct(eq(PRODUCT_ID), any(ProductDto.class)))
+                .thenReturn(requestProductDto);
+
+        mockMvc.perform(put("/products/{id}", PRODUCT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"productId\": \"12345\", \"productName\": \"Updated Product\", \"stock\": 20}")
-                )
-                .andExpect(status().isOk()); // Assert: Expect HTTP 200 OK
+                        .content(objectMapper.writeValueAsString(requestProductDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.name").value("Updated Product"))
+                .andExpect(jsonPath("$.data.price").value(120.0))
+                .andExpect(jsonPath("$.data.description").value("Updated product description"))
+                .andExpect(jsonPath("$.data.stock").value(60))
+                .andExpect(jsonPath("$.data.status").value("AVAILABLE"));
 
+        verify(productService, times(1)).updateProduct(eq(PRODUCT_ID), any(ProductDto.class));
     }
 
     @Test
-    void deleteProduct() throws Exception {
-        // Arrange: Mock the deleteProduct method to do nothing
-        doNothing().when(productService).deleteProduct(anyString());
+    public void deleteProduct_Success() throws Exception {
+        // Arrange: Mock the service to simulate product deletion
+        doNothing().when(productService).deleteProduct(PRODUCT_ID);
 
-        // Act: Perform the DELETE request to delete a product
-        mockMvc.perform(delete("/products/12345"))
-                .andExpect(status().isOk()) // Assert: Expect HTTP 200 OK
-                .andExpect(jsonPath("message").value("Deleted")); // Assert the response message
+        // Act & Assert: Perform DELETE request and expect success
+        mockMvc.perform(delete("/products/{id}", PRODUCT_ID)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(true))
+                .andExpect(jsonPath("$.msg").value(ResponseMessage.DELETED));
+
+        // Verify service method interaction
+        verify(productService, times(1)).deleteProduct(PRODUCT_ID);
     }
 
-    // Exception Tests
 
-    @Test
-    void getProductById_NotFound() throws Exception {
-        // Arrange: Mock the getProductById method to throw ProductNotFoundException
-        when(productService.getProductById(anyString())).thenThrow(new ProductNotFoundException("Product not found"));
 
-        // Act: Perform the GET request to get a product by ID
-        mockMvc.perform(get("/products/12345"))
-                .andExpect(status().isNotFound()) // Assert: Expect HTTP 404 Not Found
-                .andExpect(jsonPath("message").value("Product not found")); // Assert the error message
-    }
-
-    @Test
-    void updateProduct_NotFound() throws Exception {
-        // Arrange: Mock the updateProduct method to throw ProductNotFoundException
-        when(productService.updateProduct(eq("12345"), any(ProductDto.class)))
-                .thenThrow(new ProductNotFoundException("Product not found"));
-
-        // Act: Perform the PUT request to update a product
-        mockMvc.perform(put("/products/12345")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"productId\": \"12345\", \"productName\": \"Updated Product\", \"stock\": 20}")
-                )
-                .andExpect(status().isNotFound()) // Assert: Expect HTTP 404 Not Found
-                .andExpect(jsonPath("message").value("Product not found")); // Assert the error message
-    }
-
-    @Test
-    void deleteProduct_NotFound() throws Exception {
-        // Arrange: Mock the deleteProduct method to throw ProductNotFoundException
-        doThrow(new ProductNotFoundException("Product not found")).when(productService).deleteProduct(anyString());
-
-        // Act: Perform the DELETE request to delete a product
-        mockMvc.perform(delete("/products/12345"))
-                .andExpect(status().isNotFound()) // Assert: Expect HTTP 404 Not Found
-                .andExpect(jsonPath("message").value("Product not found")); // Assert the error message
-    }
 }

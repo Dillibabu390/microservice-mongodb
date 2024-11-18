@@ -48,7 +48,6 @@ public class ProductService {
      *
      * @return the all products
      */
-    @Cacheable(value = "order")
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
@@ -82,20 +81,33 @@ public class ProductService {
      * @return the product dto
      */
     public ProductDto updateProduct(String id, ProductDto productDto) {
-        Optional<Product> product = productRepository.findById(id);
-
-        if (product.isEmpty()) {
+        // Find the product by ID
+        Optional<Product> existingProductOpt = productRepository.findById(id);
+        if (existingProductOpt.isEmpty()) {
             throw new IllegalArgumentException("Product not found");
         }
-        Product updatedProduct = new Product().builder()
-                .name(productDto.getName())
-                .description(productDto.getDescription())
-                .price(productDto.getPrice())
-                .stock(productDto.getStock())
-                .status(productDto.getStatus())
-                .build();
-         productRepository.save(updatedProduct);
-        return productDto;
+
+        // Get the existing product
+        Product existingProduct = existingProductOpt.get();
+
+        // Update the product's fields with the new data from productDto
+        existingProduct.setName(productDto.getName());
+        existingProduct.setDescription(productDto.getDescription());
+        existingProduct.setPrice(productDto.getPrice());
+        existingProduct.setStock(productDto.getStock());
+        existingProduct.setStatus(productDto.getStatus());
+
+        // Save the updated product back to the repository
+        productRepository.save(existingProduct);
+
+        // Return the updated ProductDto (could also map the Product back to a DTO)
+        return new ProductDto(
+                id,
+                existingProduct.getName(),
+                existingProduct.getDescription(),
+                existingProduct.getPrice(),
+                existingProduct.getStock(),
+                existingProduct.getStatus());
     }
 
     /**

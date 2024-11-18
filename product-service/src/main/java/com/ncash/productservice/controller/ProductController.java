@@ -127,7 +127,7 @@ public class ProductController {
     )
     @PutMapping("/{id}")
  //   @Secured("ADMIN")
-    public ResponseEntity<Object> updateProduct(@PathVariable String id, @RequestBody ProductDto productDto) {
+    public ResponseEntity<Object> updateProduct(@PathVariable String id, @Valid @RequestBody ProductDto productDto) {
 
         log.trace("update Product details by ID method invoked in ProductController !");
         try {
@@ -165,7 +165,7 @@ public class ProductController {
             if (id == null) {
                 return APIResponseUtil.getResponseWithErrorMessage(ResponseMessage.APP_INVALID_PRODUCT_ID);
             }
-        //    productService.deleteProduct(id);
+            productService.deleteProduct(id);
 
             return APIResponseUtil.getResponseWithMessage(ResponseMessage.DELETED);
         } catch (ProductNotFoundException e) {

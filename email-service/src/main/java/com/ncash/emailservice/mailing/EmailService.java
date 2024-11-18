@@ -7,6 +7,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,9 @@ public class EmailService {
 
     @Autowired
     private Configuration config;
+
+    @Value("${mail.config.to-mail}")
+    private String toMail;
 
 
     //todo need to implement dynamic email representaion securitycontextholder to get user email by authenticated user
@@ -51,7 +55,7 @@ public class EmailService {
             }
 
             // Set the recipient, subject, and email body
-            helper.setTo("yourmail.com");
+            helper.setTo(toMail);
             helper.setText(html, true);  // Set HTML content
             helper.setSubject(orderStatus ? "Order Confirmation" : "Order Failed");  // Set dynamic subject
 

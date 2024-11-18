@@ -31,7 +31,7 @@ public interface ProductClient {
      * @param productDto the product dto
      * @return the response entity
      */
-    @PutMapping("/{id}")
+    @PutMapping("/products/{id}")
     ResponseEntity<Object> updateProduct(@PathVariable String id, @RequestBody ProductDto productDto);
 
     /**

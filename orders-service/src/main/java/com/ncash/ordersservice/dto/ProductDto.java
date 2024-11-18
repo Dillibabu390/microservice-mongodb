@@ -18,7 +18,5 @@ public class ProductDto {
 
     private Integer stock;
 
-    private String productName;
-
     private String status;
 }

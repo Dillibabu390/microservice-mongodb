@@ -81,7 +81,7 @@ public class OrderService {
 
             // Update the order details if everything goes fine
             order.setStatus(OrderStatus.CONFIRMED);
-            order.setProductName(productDto.getProductName());
+            order.setProductName(productDto.getName());
             order.setTotalPrice(orderRequest.getQuantity() * productDto.getPrice());
             // Save the order to the database
             orderRepository.save(order);
@@ -100,7 +100,7 @@ public class OrderService {
 
             log.error("Order placement failed for Product ID: {} due to: {}", orderRequest.getProductId(), ex.getMessage());
 
-            return APIResponseUtil.getResponseWithMessage(ex.getMessage());
+            return ex.getStackTrace();
         }
     }
 
