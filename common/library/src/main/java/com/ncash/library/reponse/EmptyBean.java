@@ -1,4 +1,4 @@
-package com.ncash.ordersservice.response;
+package com.ncash.library.reponse;
 
 public class EmptyBean {
     public EmptyBean() {

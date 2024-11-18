@@ -1,9 +1,7 @@
 
-package com.ncash.ordersservice.response;
+package com.ncash.library.reponse;
 
 
-import com.ncash.ordersservice.constant.APIConstant;
-import com.ncash.ordersservice.constant.ResponseMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 

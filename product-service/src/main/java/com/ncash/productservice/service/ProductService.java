@@ -32,14 +32,13 @@ public class ProductService {
      * @return the product
      */
     public Product addProduct(ProductDto productDto) {
-        Product product = Product.builder()
-                .productId(UUID.randomUUID().toString().split("-")[0])
-                .description(productDto.getDescription())
-                .name(productDto.getName())
-                .stock(productDto.getStock())
-                .price(productDto.getPrice())
-                .status(productDto.getStatus())
-                .build();
+        Product product = new Product();
+        product.setProductId(UUID.randomUUID().toString().split("-")[0]);
+        product.setDescription(productDto.getDescription());
+        product.setName(productDto.getName());
+        product.setStock(productDto.getStock());
+        product.setPrice(productDto.getPrice());
+        product.setStatus(productDto.getStatus());
         return productRepository.save(product);
     }
 
@@ -64,14 +63,16 @@ public class ProductService {
                 new ProductNotFoundException(ResponseMessage.AUD_NO_RECORDS_FOUND));
 
         // Convert the Product entity to ProductDTO
-       return   ProductDto.builder()
-                .productId(product.getProductId())
-                .description(product.getDescription())
-                .name(product.getName())
-                .stock(product.getStock())
-                .price(product.getPrice())
-                .status(product.getStatus())
-                .build();
+        ProductDto productDTO = new ProductDto();
+        productDTO.setProductId(product.getProductId());
+        productDTO.setDescription(product.getDescription());
+        productDTO.setName(product.getName());
+        productDTO.setStock(product.getStock());
+        productDTO.setStatus( product.getStatus());
+        productDTO.setPrice( product.getPrice());
+
+
+        return productDTO;
     }
 
     /**
@@ -87,13 +88,12 @@ public class ProductService {
         if (product.isEmpty()) {
             throw new IllegalArgumentException("Product not found");
         }
-        Product updatedProduct = new Product().builder()
-                .name(productDto.getName())
-                .description(productDto.getDescription())
-                .price(productDto.getPrice())
-                .stock(productDto.getStock())
-                .status(productDto.getStatus())
-                .build();
+        Product updatedProduct = product.get();
+        updatedProduct.setName(productDto.getName());
+        updatedProduct.setDescription(productDto.getDescription());
+        updatedProduct.setPrice(productDto.getPrice());
+        updatedProduct.setStock(productDto.getStock());
+        updatedProduct.setStatus(productDto.getStatus());
          productRepository.save(updatedProduct);
         return productDto;
     }

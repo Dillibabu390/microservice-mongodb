@@ -16,7 +16,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
-
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -108,8 +108,8 @@ class ProductControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"productId\": \"12345\", \"productName\": \"Updated Product\", \"stock\": 20}")
                 )
-                .andExpect(status().isOk()); // Assert: Expect HTTP 200 OK
-
+                .andExpect(status().isOk()) // Assert: Expect HTTP 200 OK
+                .andExpect(jsonPath("$.data.productName").value("Updated Product")); // Assert the updated product name in the response
     }
 
     @Test
@@ -120,7 +120,7 @@ class ProductControllerTest {
         // Act: Perform the DELETE request to delete a product
         mockMvc.perform(delete("/products/12345"))
                 .andExpect(status().isOk()) // Assert: Expect HTTP 200 OK
-                .andExpect(jsonPath("message").value("Deleted")); // Assert the response message
+                .andExpect(jsonPath("$.message").value("Deleted")); // Assert the response message
     }
 
     // Exception Tests
@@ -133,7 +133,7 @@ class ProductControllerTest {
         // Act: Perform the GET request to get a product by ID
         mockMvc.perform(get("/products/12345"))
                 .andExpect(status().isNotFound()) // Assert: Expect HTTP 404 Not Found
-                .andExpect(jsonPath("message").value("Product not found")); // Assert the error message
+                .andExpect(jsonPath("$.message").value("Product not found")); // Assert the error message
     }
 
     @Test
@@ -148,7 +148,7 @@ class ProductControllerTest {
                         .content("{\"productId\": \"12345\", \"productName\": \"Updated Product\", \"stock\": 20}")
                 )
                 .andExpect(status().isNotFound()) // Assert: Expect HTTP 404 Not Found
-                .andExpect(jsonPath("message").value("Product not found")); // Assert the error message
+                .andExpect(jsonPath("$.message").value("Product not found")); // Assert the error message
     }
 
     @Test
@@ -159,6 +159,6 @@ class ProductControllerTest {
         // Act: Perform the DELETE request to delete a product
         mockMvc.perform(delete("/products/12345"))
                 .andExpect(status().isNotFound()) // Assert: Expect HTTP 404 Not Found
-                .andExpect(jsonPath("message").value("Product not found")); // Assert the error message
+                .andExpect(jsonPath("$.message").value("Product not found")); // Assert the error message
     }
 }

@@ -3,7 +3,6 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
@@ -13,7 +12,6 @@ import java.util.UUID;
 
 @Document(collection = "products")
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class Product {
@@ -28,7 +26,6 @@ public class Product {
     private String description;
 
     @NotNull
-    @Positive(message = "Price must be positive")
     private Double price;
 
     @NotNull
